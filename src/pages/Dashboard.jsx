@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useCollection } from '../hooks/useFirestore';
-import { orderBy, where } from 'firebase/firestore';
+import { where } from 'firebase/firestore';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { 
   TrendingUp, 
@@ -20,20 +20,42 @@ const Dashboard = () => {
   const monthEnd = endOfMonth(currentDate);
 
   // Fetch current year's goals
-  const { data: goals, loading: goalsLoading } = useCollection('goals', [
-    where('year', '==', currentDate.getFullYear()),
-    orderBy('createdAt', 'desc')
+  const { data: allGoals, loading: goalsLoading } = useCollection('goals', [
+    where('year', '==', currentDate.getFullYear())
   ]);
+
+  // Sort goals by createdAt in JavaScript
+  const goals = useMemo(() => {
+    return [...allGoals].sort((a, b) => {
+      const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return bTime - aTime;
+    });
+  }, [allGoals]);
 
   // Fetch current month's transactions
-  const { data: transactions, loading: transactionsLoading } = useCollection('transactions', [
-    orderBy('date', 'desc')
-  ]);
+  const { data: allTransactions, loading: transactionsLoading } = useCollection('transactions', []);
+
+  // Sort transactions by date in JavaScript
+  const transactions = useMemo(() => {
+    return [...allTransactions].sort((a, b) => {
+      const aDate = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+      const bDate = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+      return bDate.getTime() - aDate.getTime();
+    });
+  }, [allTransactions]);
 
   // Fetch recent recaps
-  const { data: recaps, loading: recapsLoading } = useCollection('recaps', [
-    orderBy('date', 'desc')
-  ]);
+  const { data: allRecaps, loading: recapsLoading } = useCollection('recaps', []);
+
+  // Sort recaps by date in JavaScript
+  const recaps = useMemo(() => {
+    return [...allRecaps].sort((a, b) => {
+      const aDate = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+      const bDate = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+      return bDate.getTime() - aDate.getTime();
+    });
+  }, [allRecaps]);
 
   // Calculate financial summary for current month
   const financialSummary = useMemo(() => {

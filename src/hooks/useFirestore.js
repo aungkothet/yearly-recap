@@ -52,7 +52,8 @@ export const useCollection = (collectionName, queryConstraints = []) => {
     );
 
     return () => unsubscribe();
-  }, [user, collectionName, JSON.stringify(queryConstraints)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, collectionName, queryConstraints.length]);
 
   return { data, loading, error };
 };

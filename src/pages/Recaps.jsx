@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCollection, useFirestore } from '../hooks/useFirestore';
-import { orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { BookOpen, Plus, Trash2, Edit2, Check, X, Calendar } from 'lucide-react';
 
@@ -17,9 +16,16 @@ const Recaps = () => {
     date: format(new Date(), 'yyyy-MM-dd'),
   });
 
-  const { data: recaps, loading } = useCollection('recaps', [
-    orderBy('date', 'desc')
-  ]);
+  const { data: allRecaps, loading } = useCollection('recaps', []);
+
+  // Sort recaps by date in JavaScript to avoid index requirement
+  const recaps = useMemo(() => {
+    return [...allRecaps].sort((a, b) => {
+      const aDate = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+      const bDate = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+      return bDate.getTime() - aDate.getTime(); // desc order
+    });
+  }, [allRecaps]);
 
   const { addDocument, updateDocument, deleteDocument } = useFirestore('recaps');
 

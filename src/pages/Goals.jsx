@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCollection, useFirestore } from '../hooks/useFirestore';
-import { orderBy, where } from 'firebase/firestore';
+import { where } from 'firebase/firestore';
 import { Target, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 
 const CATEGORIES = ['Health', 'Career', 'Personal', 'Financial', 'Education', 'Relationships'];
@@ -18,10 +18,18 @@ const Goals = () => {
     year: currentYear,
   });
 
-  const { data: goals, loading } = useCollection('goals', [
-    where('year', '==', selectedYear),
-    orderBy('createdAt', 'desc')
+  const { data: allGoals, loading } = useCollection('goals', [
+    where('year', '==', selectedYear)
   ]);
+
+  // Sort goals by createdAt in JavaScript to avoid composite index requirement
+  const goals = useMemo(() => {
+    return [...allGoals].sort((a, b) => {
+      const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return bTime - aTime; // desc order
+    });
+  }, [allGoals]);
 
   const { addDocument, updateDocument, deleteDocument } = useFirestore('goals');
 

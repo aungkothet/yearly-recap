@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useCollection, useFirestore } from '../hooks/useFirestore';
-import { orderBy } from 'firebase/firestore';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { 
   DollarSign, 
@@ -34,9 +33,7 @@ const Finance = () => {
     date: format(new Date(), 'yyyy-MM-dd'),
   });
 
-  const { data: transactions, loading } = useCollection('transactions', [
-    orderBy('date', 'desc')
-  ]);
+  const { data: transactions, loading } = useCollection('transactions', []);
 
   const { addDocument, updateDocument, deleteDocument } = useFirestore('transactions');
 
@@ -110,12 +107,19 @@ const Finance = () => {
     const monthStart = startOfMonth(new Date(parseInt(year), parseInt(month) - 1));
     const monthEnd = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
 
-    return transactions.filter(t => {
-      const transactionDate = t.date?.toDate ? t.date.toDate() : new Date(t.date);
-      const isInMonth = transactionDate >= monthStart && transactionDate <= monthEnd;
-      const matchesType = filterType === 'all' || t.type === filterType;
-      return isInMonth && matchesType;
-    });
+    return transactions
+      .filter(t => {
+        const transactionDate = t.date?.toDate ? t.date.toDate() : new Date(t.date);
+        const isInMonth = transactionDate >= monthStart && transactionDate <= monthEnd;
+        const matchesType = filterType === 'all' || t.type === filterType;
+        return isInMonth && matchesType;
+      })
+      .sort((a, b) => {
+        // Sort by date descending
+        const aDate = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+        const bDate = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+        return bDate.getTime() - aDate.getTime();
+      });
   }, [transactions, selectedMonth, filterType]);
 
   // Calculate monthly summary
