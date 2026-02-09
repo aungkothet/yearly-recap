@@ -171,9 +171,9 @@ const Finance = () => {
         </div>
         <button
           onClick={() => setIsAddingTransaction(true)}
-          className="btn btn-primary h-11 px-6"
+          className="btn btn-primary"
         >
-          <Plus className="w-5 h-5 mr-2" />
+          <Plus className="w-5 h-5" />
           Add Transaction
         </button>
       </div>
@@ -310,7 +310,7 @@ const Finance = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="label block mb-2">Description</label>
+                <label className="label">Description</label>
                 <input
                   type="text"
                   value={formData.description}
@@ -322,7 +322,7 @@ const Finance = () => {
               </div>
 
               <div>
-                <label className="label block mb-2">Amount</label>
+                <label className="label">Amount</label>
                 <input
                   type="number"
                   step="0.01"
@@ -336,7 +336,7 @@ const Finance = () => {
               </div>
 
               <div>
-                <label className="label block mb-2">Date</label>
+                <label className="label">Date</label>
                 <input
                   type="date"
                   value={formData.date}
@@ -347,7 +347,7 @@ const Finance = () => {
               </div>
 
               <div>
-                <label className="label block mb-2">Type</label>
+                <label className="label">Type</label>
                 <select
                   value={formData.type}
                   onChange={(e) => {
@@ -366,7 +366,7 @@ const Finance = () => {
               </div>
 
               <div>
-                <label className="label block mb-2">Category</label>
+                <label className="label">Category</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -382,12 +382,12 @@ const Finance = () => {
             </div>
 
             <div className="flex gap-3">
-              <button type="submit" className="btn btn-primary">
-                <Check className="w-4 h-4 mr-2" />
+              <button type="submit" className="btn btn-success">
+                <Check className="w-4 h-4" />
                 {editingTransaction ? 'Update' : 'Add'} Transaction
               </button>
               <button type="button" onClick={handleCancel} className="btn btn-secondary">
-                <X className="w-4 h-4 mr-2" />
+                <X className="w-4 h-4" />
                 Cancel
               </button>
             </div>
@@ -469,15 +469,17 @@ const Finance = () => {
                   <div className="flex gap-1">
                     <button
                       onClick={() => handleEdit(transaction)}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      className="icon-btn"
+                      title="Edit transaction"
                     >
-                      <Edit2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(transaction.id)}
-                      className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      className="icon-btn-danger"
+                      title="Delete transaction"
                     >
-                      <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

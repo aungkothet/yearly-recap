@@ -136,9 +136,9 @@ const Goals = () => {
         </div>
         <button
           onClick={() => setIsAddingGoal(true)}
-          className="btn btn-primary h-11 px-6"
+          className="btn btn-primary"
         >
-          <Plus className="w-5 h-5 mr-2" />
+          <Plus className="w-5 h-5" />
           Add Goal
         </button>
       </div>
@@ -147,7 +147,7 @@ const Goals = () => {
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-            <label className="label text-gray-700 dark:text-gray-300">Year:</label>
+            <label className="label">Year:</label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -185,7 +185,7 @@ const Goals = () => {
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label block mb-2">Goal Title</label>
+              <label className="label">Goal Title</label>
               <input
                 type="text"
                 value={formData.title}
@@ -198,7 +198,7 @@ const Goals = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="label block mb-2">Category</label>
+                <label className="label">Category</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -213,7 +213,7 @@ const Goals = () => {
               </div>
 
               <div>
-                <label className="label block mb-2">Status</label>
+                <label className="label">Status</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -226,7 +226,7 @@ const Goals = () => {
               </div>
 
               <div>
-                <label className="label block mb-2">Year</label>
+                <label className="label">Year</label>
                 <input
                   type="number"
                   value={formData.year}
@@ -239,12 +239,12 @@ const Goals = () => {
             </div>
 
             <div className="flex gap-3">
-              <button type="submit" className="btn btn-primary">
-                <Check className="w-4 h-4 mr-2" />
+              <button type="submit" className="btn btn-success">
+                <Check className="w-4 h-4" />
                 {editingGoal ? 'Update' : 'Add'} Goal
               </button>
               <button type="button" onClick={handleCancel} className="btn btn-secondary">
-                <X className="w-4 h-4 mr-2" />
+                <X className="w-4 h-4" />
                 Cancel
               </button>
             </div>
@@ -295,21 +295,23 @@ const Goals = () => {
                     className="card p-5 hover:shadow-lg transition-all duration-200"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(goal.status)}`}>
-                        {goal.status.replace('-', ' ')}
+                      <span className={`badge ${getStatusColor(goal.status)}`}>
+                        {goal.status.replace('-', ' ').toUpperCase()}
                       </span>
                       <div className="flex gap-1">
                         <button
                           onClick={() => handleEdit(goal)}
-                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          className="icon-btn"
+                          title="Edit goal"
                         >
-                          <Edit2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                          <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(goal.id)}
-                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          className="icon-btn-danger"
+                          title="Delete goal"
                         >
-                          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
