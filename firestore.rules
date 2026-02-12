@@ -12,7 +12,7 @@ service cloud.firestore {
     }
     
     // User document rules
-    match /users/{userId} {
+    match /users-recap/{userId} {
       // Users can read and write their own user document
       allow read, write: if isOwner(userId);
       

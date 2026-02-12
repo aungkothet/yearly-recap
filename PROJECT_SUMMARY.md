@@ -141,10 +141,10 @@ A complete, production-ready Progressive Web App for personal life and finance t
 ### 📊 Data Schema
 
 **Collections:**
-- `users/{userId}` - User profiles
-- `users/{userId}/goals` - User goals
-- `users/{userId}/recaps` - User journal entries
-- `users/{userId}/transactions` - User financial transactions
+- `users-recap/{userId}` - User profiles
+- `users-recap/{userId}/goals` - User goals
+- `users-recap/{userId}/recaps` - User journal entries
+- `users-recap/{userId}/transactions` - User financial transactions
 
 All with proper timestamps and validation.
 

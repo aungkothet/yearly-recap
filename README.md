@@ -117,7 +117,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // User document rules
-    match /users/{userId} {
+    match /users-recap/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
       // Goals subcollection
@@ -211,7 +211,7 @@ Your app will be live at `https://your-project-id.web.app`
 
 ### Users Collection
 ```
-/users/{userId}
+/users-recap/{userId}
   - email: string
   - displayName: string
   - createdAt: timestamp
@@ -219,7 +219,7 @@ Your app will be live at `https://your-project-id.web.app`
 
 ### Goals Subcollection
 ```
-/users/{userId}/goals/{goalId}
+/users-recap/{userId}/goals/{goalId}
   - title: string
   - category: string (Health, Career, Personal, Financial, Education, Relationships)
   - status: string (not-started, in-progress, completed)
@@ -230,7 +230,7 @@ Your app will be live at `https://your-project-id.web.app`
 
 ### Recaps Subcollection
 ```
-/users/{userId}/recaps/{recapId}
+/users-recap/{userId}/recaps/{recapId}
   - title: string
   - content: string
   - type: string (Daily, Weekly, Monthly, Yearly)
@@ -241,7 +241,7 @@ Your app will be live at `https://your-project-id.web.app`
 
 ### Transactions Subcollection
 ```
-/users/{userId}/transactions/{transactionId}
+/users-recap/{userId}/transactions/{transactionId}
   - description: string
   - amount: number
   - type: string (income, expense)
