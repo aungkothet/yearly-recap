@@ -12,6 +12,13 @@ import {
   Calendar
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+
+const CURRENCIES = {
+  USD: { symbol: '$', label: 'USD' },
+  THB: { symbol: '฿', label: 'THB' },
+  MMK: { symbol: 'K', label: 'MMK' }
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -64,18 +71,24 @@ const Dashboard = () => {
       return transactionDate >= monthStart && transactionDate <= monthEnd;
     });
 
-    const income = currentMonthTransactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const expenses = currentMonthTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const summary = {};
+    currentMonthTransactions.forEach(t => {
+      const curr = t.currency || 'USD';
+      if (!summary[curr]) {
+        summary[curr] = { income: 0, expenses: 0, balance: 0 };
+      }
+      
+      const amount = Number(t.amount);
+      if (t.type === 'income') {
+        summary[curr].income += amount;
+      } else {
+        summary[curr].expenses += amount;
+      }
+      summary[curr].balance = summary[curr].income - summary[curr].expenses;
+    });
 
     return {
-      income,
-      expenses,
-      balance: income - expenses,
+      currencies: summary,
       transactionCount: currentMonthTransactions.length
     };
   }, [transactions, monthStart, monthEnd]);
@@ -87,7 +100,7 @@ const Dashboard = () => {
     return Math.round((completed / goals.length) * 100);
   }, [goals]);
 
-  const StatCard = ({ title, value, subtitle, icon: Icon, trend, color = 'primary' }) => (
+  const StatCard = ({ title, value, subtitle, icon: Icon, trend, color = 'primary', currencyList = [] }) => (
     <div className="card p-6 hover:scale-105 transition-transform duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className={`p-3 rounded-xl bg-${color}-100 dark:bg-${color}-900/30`}>
@@ -103,7 +116,18 @@ const Dashboard = () => {
         )}
       </div>
       <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{title}</h3>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{value}</p>
+      {currencyList.length > 0 ? (
+        <div className="space-y-1 mb-1">
+          {currencyList.map(({ curr, amount }) => (
+            <p key={curr} className="text-xl font-bold text-gray-900 dark:text-white flex justify-between items-baseline">
+              <span className="text-xs font-normal text-gray-500 mr-2">{curr}</span>
+              <span>{amount < 0 ? '-' : ''}{CURRENCIES[curr]?.symbol}{Math.abs(amount).toLocaleString()}</span>
+            </p>
+          ))}
+        </div>
+      ) : (
+        <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{value || '$0'}</p>
+      )}
       {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
     </div>
   );
@@ -139,21 +163,21 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Monthly Balance"
-          value={`$${financialSummary.balance.toLocaleString()}`}
+          currencyList={Object.entries(financialSummary.currencies).map(([curr, v]) => ({ curr, amount: v.balance }))}
           subtitle={`${financialSummary.transactionCount} transactions`}
           icon={DollarSign}
           color="primary"
         />
         <StatCard
           title="Income"
-          value={`$${financialSummary.income.toLocaleString()}`}
+          currencyList={Object.entries(financialSummary.currencies).filter(([_, v]) => v.income > 0).map(([curr, v]) => ({ curr, amount: v.income }))}
           subtitle="This month"
           icon={TrendingUp}
           color="green"
         />
         <StatCard
           title="Expenses"
-          value={`$${financialSummary.expenses.toLocaleString()}`}
+          currencyList={Object.entries(financialSummary.currencies).filter(([_, v]) => v.expenses > 0).map(([curr, v]) => ({ curr, amount: v.expenses }))}
           subtitle="This month"
           icon={TrendingDown}
           color="red"
@@ -240,7 +264,7 @@ const Dashboard = () => {
                       ? 'text-green-600 dark:text-green-400'
                       : 'text-red-600 dark:text-red-400'
                   }`}>
-                    {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toLocaleString()}
+                    {transaction.type === 'income' ? '+' : '-'}{CURRENCIES[transaction.currency || 'USD']?.symbol}{Number(transaction.amount).toLocaleString()}
                   </span>
                 </div>
               ))

@@ -1,28 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is authenticated
+    
+    // --- HELPER FUNCTIONS ---
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Helper function to check if user owns the document
-    function isOwner(userId) {
+
+    // For Project 1: Checks based on the User's UID
+    function isUidOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    // User document rules
+
+    // For Project 2: Checks based on the User's Email
+    function isEmailOwner(userEmail) {
+      return isAuthenticated() && request.auth.token.email == userEmail;
+    }
+
+    // --- PROJECT 1: USERS-RECAP STRUCTURE ---
     match /users-recap/{userId} {
-      // Users can read and write their own user document
-      allow read, write: if isOwner(userId);
+      allow read, write: if isUidOwner(userId);
       
-      // Goals subcollection
       match /goals/{goalId} {
-        // Users can only access their own goals
-        allow read, write: if isOwner(userId);
-        
-        // Validate goal data structure
-        allow create: if isOwner(userId) 
+        allow read, write: if isUidOwner(userId);
+        allow create: if isUidOwner(userId) 
           && request.resource.data.keys().hasAll(['title', 'category', 'status', 'year'])
           && request.resource.data.title is string
           && request.resource.data.category in ['Health', 'Career', 'Personal', 'Financial', 'Education', 'Relationships']
@@ -30,13 +31,9 @@ service cloud.firestore {
           && request.resource.data.year is int;
       }
       
-      // Recaps subcollection
       match /recaps/{recapId} {
-        // Users can only access their own recaps
-        allow read, write: if isOwner(userId);
-        
-        // Validate recap data structure
-        allow create: if isOwner(userId)
+        allow read, write: if isUidOwner(userId);
+        allow create: if isUidOwner(userId)
           && request.resource.data.keys().hasAll(['title', 'content', 'type', 'date'])
           && request.resource.data.title is string
           && request.resource.data.content is string
@@ -44,13 +41,9 @@ service cloud.firestore {
           && request.resource.data.date is timestamp;
       }
       
-      // Transactions subcollection
       match /transactions/{transactionId} {
-        // Users can only access their own transactions
-        allow read, write: if isOwner(userId);
-        
-        // Validate transaction data structure
-        allow create: if isOwner(userId)
+        allow read, write: if isUidOwner(userId);
+        allow create: if isUidOwner(userId)
           && request.resource.data.keys().hasAll(['description', 'amount', 'type', 'category', 'date'])
           && request.resource.data.description is string
           && request.resource.data.amount is number
@@ -60,8 +53,22 @@ service cloud.firestore {
           && request.resource.data.date is timestamp;
       }
     }
-    
-    // Deny all other access
+
+    // --- PROJECT 2: USER EMAIL STRUCTURE ---
+    match /users/{userEmail} {
+      // Access to accounts subcollection
+      match /accounts/{document=**} {
+        allow read, write: if isEmailOwner(userEmail);
+      }
+      
+      // Access to transactions subcollection
+      match /transactions/{document=**} {
+        allow read, write: if isEmailOwner(userEmail);
+      }
+    }
+
+    // --- GLOBAL DENY ---
+    // This acts as a fallback for any path not explicitly matched above
     match /{document=**} {
       allow read, write: if false;
     }

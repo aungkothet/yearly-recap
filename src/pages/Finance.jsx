@@ -19,6 +19,12 @@ const TRANSACTION_CATEGORIES = {
   expense: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Education', 'Other Expense']
 };
 
+const CURRENCIES = {
+  USD: { symbol: '$', label: 'USD' },
+  THB: { symbol: '฿', label: 'THB' },
+  MMK: { symbol: 'K', label: 'MMK' }
+};
+
 const Finance = () => {
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(format(currentDate, 'yyyy-MM'));
@@ -28,6 +34,7 @@ const Finance = () => {
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
+    currency: 'USD',
     type: 'expense',
     category: 'Food',
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -58,6 +65,7 @@ const Finance = () => {
       setFormData({
         description: '',
         amount: '',
+        currency: 'USD',
         type: 'expense',
         category: 'Food',
         date: format(new Date(), 'yyyy-MM-dd'),
@@ -72,6 +80,7 @@ const Finance = () => {
     setFormData({
       description: transaction.description,
       amount: transaction.amount.toString(),
+      currency: transaction.currency || 'USD',
       type: transaction.type,
       category: transaction.category,
       date: format(transaction.date?.toDate ? transaction.date.toDate() : new Date(transaction.date), 'yyyy-MM-dd'),
@@ -95,6 +104,7 @@ const Finance = () => {
     setFormData({
       description: '',
       amount: '',
+      currency: 'USD',
       type: 'expense',
       category: 'Food',
       date: format(new Date(), 'yyyy-MM-dd'),
@@ -124,29 +134,36 @@ const Finance = () => {
 
   // Calculate monthly summary
   const monthlySummary = useMemo(() => {
-    const income = monthlyTransactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const summary = {};
+    
+    monthlyTransactions.forEach(t => {
+      const curr = t.currency || 'USD';
+      if (!summary[curr]) {
+        summary[curr] = { income: 0, expenses: 0, balance: 0 };
+      }
+      
+      const amount = Number(t.amount);
+      if (t.type === 'income') {
+        summary[curr].income += amount;
+      } else {
+        summary[curr].expenses += amount;
+      }
+      summary[curr].balance = summary[curr].income - summary[curr].expenses;
+    });
 
-    const expenses = monthlyTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    return {
-      income,
-      expenses,
-      balance: income - expenses,
-    };
+    return summary;
   }, [monthlyTransactions]);
 
   // Group transactions by category
   const transactionsByCategory = useMemo(() => {
     return monthlyTransactions.reduce((acc, transaction) => {
-      const key = `${transaction.type}-${transaction.category}`;
+      const curr = transaction.currency || 'USD';
+      const key = `${transaction.type}-${transaction.category}-${curr}`;
       if (!acc[key]) {
         acc[key] = {
           category: transaction.category,
           type: transaction.type,
+          currency: curr,
           total: 0,
           count: 0,
         };
@@ -212,55 +229,68 @@ const Finance = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-lg bg-green-500/20">
               <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <h3 className="text-sm font-medium text-green-900 dark:text-green-300">Income</h3>
           </div>
-          <p className="text-3xl font-bold text-green-700 dark:text-green-400">
-            ${monthlySummary.income.toLocaleString()}
-          </p>
+          <div className="space-y-2">
+            {Object.keys(monthlySummary).length > 0 ? Object.entries(monthlySummary).map(([curr, values]) => (
+              values.income > 0 && (
+                <div key={curr} className="flex justify-between items-end">
+                  <span className="text-xs font-semibold text-green-600/60 dark:text-green-400/60">{curr}</span>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                    {CURRENCIES[curr]?.symbol}{values.income.toLocaleString()}
+                  </p>
+                </div>
+              )
+            )) : <p className="text-2xl font-bold text-green-700 dark:text-green-400">$0</p>}
+          </div>
         </div>
 
         <div className="card p-6 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-lg bg-red-500/20">
               <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <h3 className="text-sm font-medium text-red-900 dark:text-red-300">Expenses</h3>
           </div>
-          <p className="text-3xl font-bold text-red-700 dark:text-red-400">
-            ${monthlySummary.expenses.toLocaleString()}
-          </p>
+          <div className="space-y-2">
+            {Object.keys(monthlySummary).length > 0 ? Object.entries(monthlySummary).map(([curr, values]) => (
+              values.expenses > 0 && (
+                <div key={curr} className="flex justify-between items-end">
+                  <span className="text-xs font-semibold text-red-600/60 dark:text-red-400/60">{curr}</span>
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+                    {CURRENCIES[curr]?.symbol}{values.expenses.toLocaleString()}
+                  </p>
+                </div>
+              )
+            )) : <p className="text-2xl font-bold text-red-700 dark:text-red-400">$0</p>}
+          </div>
         </div>
 
-        <div className={`card p-6 bg-gradient-to-br ${
-          monthlySummary.balance >= 0
-            ? 'from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800'
-            : 'from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800'
-        }`}>
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`p-2 rounded-lg ${monthlySummary.balance >= 0 ? 'bg-blue-500/20' : 'bg-orange-500/20'}`}>
-              <DollarSign className={`w-6 h-6 ${
-                monthlySummary.balance >= 0 
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-orange-600 dark:text-orange-400'
-              }`} />
+        <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-blue-500/20">
+              <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <h3 className={`text-sm font-medium ${
-              monthlySummary.balance >= 0
-                ? 'text-blue-900 dark:text-blue-300'
-                : 'text-orange-900 dark:text-orange-300'
-            }`}>Balance</h3>
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-300">Balance</h3>
           </div>
-          <p className={`text-3xl font-bold ${
-            monthlySummary.balance >= 0
-              ? 'text-blue-700 dark:text-blue-400'
-              : 'text-orange-700 dark:text-orange-400'
-          }`}>
-            ${Math.abs(monthlySummary.balance).toLocaleString()}
-          </p>
+          <div className="space-y-2">
+            {Object.keys(monthlySummary).length > 0 ? Object.entries(monthlySummary).map(([curr, values]) => (
+              <div key={curr} className="flex justify-between items-end">
+                <span className={`text-xs font-semibold ${values.balance >= 0 ? 'text-blue-600/60 dark:text-blue-400/60' : 'text-orange-600/60 dark:text-orange-400/60'}`}>{curr}</span>
+                <p className={`text-2xl font-bold ${
+                  values.balance >= 0
+                    ? 'text-blue-700 dark:text-blue-400'
+                    : 'text-orange-700 dark:text-orange-400'
+                }`}>
+                  {values.balance < 0 ? '-' : ''}{CURRENCIES[curr]?.symbol}{Math.abs(values.balance).toLocaleString()}
+                </p>
+              </div>
+            )) : <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">$0</p>}
+          </div>
         </div>
       </div>
 
@@ -293,7 +323,7 @@ const Finance = () => {
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-red-600 dark:text-red-400'
                 }`}>
-                  ${item.total.toLocaleString()}
+                  {CURRENCIES[item.currency]?.symbol}{item.total.toLocaleString()}
                 </p>
               </div>
             ))}
@@ -323,16 +353,27 @@ const Finance = () => {
 
               <div>
                 <label className="label">Amount</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="input w-full"
-                  placeholder="0.00"
-                  required
-                  min="0"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    className="input"
+                    placeholder="0.00"
+                    required
+                    min="0"
+                  />
+                  <select
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    className="input"
+                  >
+                    {Object.entries(CURRENCIES).map(([code, { label }]) => (
+                      <option key={code} value={code}>{label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -464,7 +505,7 @@ const Finance = () => {
                       ? 'text-green-600 dark:text-green-400'
                       : 'text-red-600 dark:text-red-400'
                   }`}>
-                    {transaction.type === 'income' ? '+' : '-'}${Number(transaction.amount).toLocaleString()}
+                    {transaction.type === 'income' ? '+' : '-'}{CURRENCIES[transaction.currency || 'USD']?.symbol}{Number(transaction.amount).toLocaleString()}
                   </span>
                   <div className="flex gap-1">
                     <button
